@@ -193,7 +193,7 @@ Entramos al nodo de Spark master
 
 2.- Convierte el df en un RDD (Resilient Distributed Dataset) y aplica una función flatMap
 ```
-    words = text.rdd.flatMap(lambda line: line.value.split())
+    words = text_df.rdd.flatMap(lambda line: line.value.split())
 ```  
 
 3.- Toma cada palabra de la variable RDD words y cuenta cada repetición   
