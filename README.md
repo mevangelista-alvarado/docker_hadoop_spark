@@ -1,11 +1,73 @@
-[![Gitter chat](https://badges.gitter.im/gitterHQ/gitter.png)](https://gitter.im/big-data-europe/Lobby)
+![Logo_compuesto_vof_2025](https://github.com/user-attachments/assets/df7db686-cfb0-4b47-a125-8cc28e402332)
 
-# Docker multi-container environment with Hadoop, Spark and Hive
+Este repositorio fue utilizado para mostrar el uso de **Hadoop y Spark** (con Docker) para la materia *Herramientas Avanzadas para el Manejo de Grandes Volúmenes de Datos* de la Licenciatura en Ciencia de Datos para Negocios (LCDN) de la Universidad Nacional Rosario Castellanos (UNRC).
 
-This is it: a Docker multi-container environment with Hadoop (HDFS), Spark and Hive. But without the large memory requirements of a Cloudera sandbox. (On my Windows 10 laptop (with WSL2) it seems to consume a mere 3 GB.)
+# Docker + Hadoop + PySpark
 
-The only thing lacking, is that Hive server doesn't start automatically. To be added when I understand how to do that in docker-compose.
+Contenedor de Docker con Hadoop (HDFS) y Spark. Pero sin los grandes requisitos de memoria de un sandbox de Cloudera.  
 
+## Pre-requisitos
+Tener Docker Desktop instalado para Windows y MacOs. Para el caso de Google Chromebook debe tener instalado Docker (vía terminal) 
+
+**Observación:**  
+Los comandos utilizados en este repositorio se ejecutaron en los siguientes sistemas operativos (+ Docker):  
+* _Windows 11_,  
+* _macOS_ (con chip Intel y M2), y  
+* Google Chromebook.
+
+## Clonar repositorio
+#### Opción 1 (Manual)
+ 1.- Hacer click en el botón __<> CODE__  
+ 2.- Hacer click en el botón __Download ZIP__   
+<img width="407" alt="image" src="https://github.com/user-attachments/assets/ec0e5f1e-3254-4d2b-9b69-f19c88e9c205" />
+
+#### Opción 2 (Terminal) 
+Ejecutar  
+```
+  git clone https://github.com/mevangelista-alvarado/docker_hadoop_spark.git 
+```
+
+## Hadoop Docker
+Para ejecutar los siguientes comandos, debe ubicarse en la carpeta que contenga el archivo `docker-compose.yml`.
+
+### Iniciar el contenedor
+Para desplegar el ejemplo de un clúster HDFS, ejecute en la consola de su computadora (según el caso, si es la primera vez o no) lo siguiente:
+
+#### Instalar el contenedor por primera vez
+```
+docker-compose up
+```
+
+#### Levantar el contenedor si ya está instalado
+```
+docker-compose start
+```
+
+#### Verificar que el contenedor está trabajando
+Para comprobar que el contenedor está en funcionamiento:
+```
+docker-compose ps
+```
+Si el estado es `UP`, entonces el contenedor está trabajando correctamente. De lo contrario, ha ocurrido un error al inicializarlo.
+
+#### Apagar el contenedor
+```
+docker-compose stop
+```
+**Observación:**  
+Ejecute 
+```
+  docker network inspect
+```
+para encontrar la IP donde se publican las interfaces de Hadoop. Acceda a estas interfaces con las siguientes URL:
+
+* Namenode: http://<dockerhadoop_IP_address>:9870/dfshealth.html#tab-overview
+* History server: http://<dockerhadoop_IP_address>:8188/applicationhistory
+* Datanode: http://<dockerhadoop_IP_address>:9864/
+* Nodemanager: http://<dockerhadoop_IP_address>:8042/node
+* Resource manager: http://<dockerhadoop_IP_address>:8088/
+* Spark master: http://<dockerhadoop_IP_address>:8080/
+* Spark worker: http://<dockerhadoop_IP_address>:8081/
 
 ## Quick Start
 
@@ -18,14 +80,7 @@ To deploy an the HDFS-Spark-Hive cluster, run:
 
 Run `docker network inspect` on the network (e.g. `docker-hadoop-spark-hive_default`) to find the IP the hadoop interfaces are published on. Access these interfaces with the following URLs:
 
-* Namenode: http://<dockerhadoop_IP_address>:9870/dfshealth.html#tab-overview
-* History server: http://<dockerhadoop_IP_address>:8188/applicationhistory
-* Datanode: http://<dockerhadoop_IP_address>:9864/
-* Nodemanager: http://<dockerhadoop_IP_address>:8042/node
-* Resource manager: http://<dockerhadoop_IP_address>:8088/
-* Spark master: http://<dockerhadoop_IP_address>:8080/
-* Spark worker: http://<dockerhadoop_IP_address>:8081/
-* Hive: http://<dockerhadoop_IP_address>:10000
+
 
 ## Important note regarding Docker Desktop
 Since Docker Desktop turned “Expose daemon on tcp://localhost:2375 without TLS” off by default there have been all kinds of connection problems running the complete docker-compose. Turning this option on again (Settings > General > Expose daemon on tcp://localhost:2375 without TLS) makes it all work. I’m still looking for a more secure solution to this.
