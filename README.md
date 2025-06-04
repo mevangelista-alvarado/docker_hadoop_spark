@@ -38,7 +38,7 @@ Para desplegar el ejemplo de un clúster HDFS, ejecute en la consola de su compu
 docker-compose up
 ```
 
-#### Levantar el contenedor si ya está instalado
+#### Levantar el contenedor, si ya está instalado
 ```
 docker-compose start
 ```
@@ -55,262 +55,294 @@ Si el estado es `UP`, entonces el contenedor está trabajando correctamente. De 
 docker-compose stop
 ```
 **Observación:**  
-Ejecute 
-```
-  docker network inspect
-```
-para encontrar la IP donde se publican las interfaces de Hadoop. Acceda a estas interfaces con las siguientes URL:
+Acceda a las interfaces de Hadoop con las siguientes URL:
 
-* Namenode: http://<dockerhadoop_IP_address>:9870/dfshealth.html#tab-overview
-* History server: http://<dockerhadoop_IP_address>:8188/applicationhistory
-* Datanode: http://<dockerhadoop_IP_address>:9864/
-* Nodemanager: http://<dockerhadoop_IP_address>:8042/node
-* Resource manager: http://<dockerhadoop_IP_address>:8088/
-* Spark master: http://<dockerhadoop_IP_address>:8080/
-* Spark worker: http://<dockerhadoop_IP_address>:8081/
-
-## Quick Start
-
-To deploy an the HDFS-Spark-Hive cluster, run:
-```
-  docker-compose up
-```
-
-`docker-compose` creates a docker network that can be found by running `docker network list`, e.g. `docker-hadoop-spark-hive_default`.
-
-Run `docker network inspect` on the network (e.g. `docker-hadoop-spark-hive_default`) to find the IP the hadoop interfaces are published on. Access these interfaces with the following URLs:
-
-
-
-## Important note regarding Docker Desktop
-Since Docker Desktop turned “Expose daemon on tcp://localhost:2375 without TLS” off by default there have been all kinds of connection problems running the complete docker-compose. Turning this option on again (Settings > General > Expose daemon on tcp://localhost:2375 without TLS) makes it all work. I’m still looking for a more secure solution to this.
-
+* Namenode: http://localhost:9870/dfshealth.html#tab-overview
+* Datanode: http://localhost:9864/datanode.html
+* Spark master: http://localhost:8080/
+* Spark worker: http://localhost:8081/
 
 ## Quick Start HDFS
-
-Copy breweries.csv to the namenode.
+Entramos a Hadoop
 ```
-  docker cp breweries.csv namenode:breweries.csv
-```
-
-Go to the bash shell on the namenode with that same Container ID of the namenode.
-```
-  docker exec -it namenode bash
+    docker exec -it namenode bash
 ```
 
+Para crear una carpeta de HDFS, seguimos lo siguiente: 
+ * `hdfs dfs -ls /` (Ver que contenido hay en HDFS)
+ * `hdfs dfs -mkdir -p /user/data` (Crear el directorio /user/data)
+ * `exit` (Salir del nodo)
 
-Create a HDFS directory /data//openbeer/breweries.
+Agregamos los siguientes archivos en HDFS
+ * `el_quijote.txt` 
+ * `afluenciastc_desglosado_04_2025.csv`
+ * `breweries.csv`
 
+#### Archivo `el_quijote.txt` 
+1.- Copiamos el archivo de nuestra computadora al contendor de Docker
 ```
-  hdfs dfs -mkdir -p /data/openbeer/breweries
+    docker cp ./datasets/el_quijote.txt namenode:/tmp
+```  
+2.- Entramos a Hadoop
 ```
-
-Copy breweries.csv to HDFS:
+    docker exec -it namenode bash
+```  
+3.- Ingresamos a la memorial temporal del nodo 
 ```
-  hdfs dfs -put breweries.csv /data/openbeer/breweries/breweries.csv
+    cd /tmp
 ```
-
-
-## Quick Start Spark (PySpark)
-
-Go to http://<dockerhadoop_IP_address>:8080 or http://localhost:8080/ on your Docker host (laptop) to see the status of the Spark master.
-
-Go to the command line of the Spark master and start PySpark.
+4.- Verficamos que el archivo se encuentra en la memoria temporal del nod
 ```
-  docker exec -it spark-master bash
-
-  /spark/bin/pyspark --master spark://spark-master:7077
+    ls
 ```
-
-Load breweries.csv from HDFS.
+5.- mMovemos el archivo a Hadoop con HDFS
 ```
-  brewfile = spark.read.csv("hdfs://namenode:9000/data/openbeer/breweries/breweries.csv")
-  
-  brewfile.show()
-+----+--------------------+-------------+-----+---+
-| _c0|                 _c1|          _c2|  _c3|_c4|
-+----+--------------------+-------------+-----+---+
-|null|                name|         city|state| id|
-|   0|  NorthGate Brewing |  Minneapolis|   MN|  0|
-|   1|Against the Grain...|   Louisville|   KY|  1|
-|   2|Jack's Abby Craft...|   Framingham|   MA|  2|
-|   3|Mike Hess Brewing...|    San Diego|   CA|  3|
-|   4|Fort Point Beer C...|San Francisco|   CA|  4|
-|   5|COAST Brewing Com...|   Charleston|   SC|  5|
-|   6|Great Divide Brew...|       Denver|   CO|  6|
-|   7|    Tapistry Brewing|     Bridgman|   MI|  7|
-|   8|    Big Lake Brewing|      Holland|   MI|  8|
-|   9|The Mitten Brewin...| Grand Rapids|   MI|  9|
-|  10|      Brewery Vivant| Grand Rapids|   MI| 10|
-|  11|    Petoskey Brewing|     Petoskey|   MI| 11|
-|  12|  Blackrocks Brewery|    Marquette|   MI| 12|
-|  13|Perrin Brewing Co...|Comstock Park|   MI| 13|
-|  14|Witch's Hat Brewi...|   South Lyon|   MI| 14|
-|  15|Founders Brewing ...| Grand Rapids|   MI| 15|
-|  16|   Flat 12 Bierwerks| Indianapolis|   IN| 16|
-|  17|Tin Man Brewing C...|   Evansville|   IN| 17|
-|  18|Black Acre Brewin...| Indianapolis|   IN| 18|
-+----+--------------------+-------------+-----+---+
-only showing top 20 rows
-
+    hdfs dfs -put el_quijote.txt /user/data
+```  
+6.- Verificamos que el archivo se movio correctamente a Hadoop
+```
+    hdfs dfs -ls /user/data
+```
+7.- Finalmente, salimos del nodo
+```
+    exit 
 ```
 
+#### Archivo `afluenciastc_desglosado_04_2025.csv`
+0.- Debido que Github, no permite alojar archivos pesado, descargamos el archivo `afluenciastc_desglosado_04_2025.csv` haciendo [click aquí](https://drive.google.com/file/d/11_s7fHDGGuRmaeteG6Z5-FHYWN0ZByn5/view?usp=sharing).  
 
+Movemos el archivo al directorio `\datasets` de nuestro repo.
 
-## Quick Start Spark (Scala)
-
-Go to http://<dockerhadoop_IP_address>:8080 or http://localhost:8080/ on your Docker host (laptop) to see the status of the Spark master.
-
-Go to the command line of the Spark master and start spark-shell.
+1.- Copiamos el archivo de nuestra computadora al contendor de Docker
 ```
-  docker exec -it spark-master bash
-  
-  spark/bin/spark-shell --master spark://spark-master:7077
+    docker cp ./datasets/afluenciastc_desglosado_04_2025.csv namenode:/tmp
+```  
+2.- Entramos a Hadoop
 ```
-
-Load breweries.csv from HDFS.
+    docker exec -it namenode bash
+```  
+3.- Ingresamos a la memorial temporal del nodo 
 ```
-  val df = spark.read.csv("hdfs://namenode:9000/data/openbeer/breweries/breweries.csv")
-  
-  df.show()
-+----+--------------------+-------------+-----+---+
-| _c0|                 _c1|          _c2|  _c3|_c4|
-+----+--------------------+-------------+-----+---+
-|null|                name|         city|state| id|
-|   0|  NorthGate Brewing |  Minneapolis|   MN|  0|
-|   1|Against the Grain...|   Louisville|   KY|  1|
-|   2|Jack's Abby Craft...|   Framingham|   MA|  2|
-|   3|Mike Hess Brewing...|    San Diego|   CA|  3|
-|   4|Fort Point Beer C...|San Francisco|   CA|  4|
-|   5|COAST Brewing Com...|   Charleston|   SC|  5|
-|   6|Great Divide Brew...|       Denver|   CO|  6|
-|   7|    Tapistry Brewing|     Bridgman|   MI|  7|
-|   8|    Big Lake Brewing|      Holland|   MI|  8|
-|   9|The Mitten Brewin...| Grand Rapids|   MI|  9|
-|  10|      Brewery Vivant| Grand Rapids|   MI| 10|
-|  11|    Petoskey Brewing|     Petoskey|   MI| 11|
-|  12|  Blackrocks Brewery|    Marquette|   MI| 12|
-|  13|Perrin Brewing Co...|Comstock Park|   MI| 13|
-|  14|Witch's Hat Brewi...|   South Lyon|   MI| 14|
-|  15|Founders Brewing ...| Grand Rapids|   MI| 15|
-|  16|   Flat 12 Bierwerks| Indianapolis|   IN| 16|
-|  17|Tin Man Brewing C...|   Evansville|   IN| 17|
-|  18|Black Acre Brewin...| Indianapolis|   IN| 18|
-+----+--------------------+-------------+-----+---+
-only showing top 20 rows
-
+    cd /tmp
+```
+4.- Verficamos que el archivo se encuentra en la memoria temporal del nod
+```
+    ls
+```
+5.- Movemos el archivo a Hadoop con HDFS
+```
+    hdfs dfs -put afluenciastc_desglosado_04_2025.csv /user/data
+```  
+6.- Verificamos que el archivo se movio correctamente a Hadoop
+```
+    hdfs dfs -ls /user/data
+```
+7.- Finalmente, salimos del nodo
+```
+    exit 
 ```
 
-How cool is that? Your own Spark cluster to play with.
-
-
-## Quick Start Hive
-
-Go to the command line of the Hive server and start hiveserver2
-
+#### Archivo `breweries.csv`
+1.- Copiamos el archivo de nuestra computadora al contendor de Docker
 ```
-  docker exec -it hive-server bash
-
-  hiveserver2
+    docker cp ./datasets/breweries.csv namenode:/tmp
+```  
+2.- Entramos a Hadoop
 ```
-
-Maybe a little check that something is listening on port 10000 now
+    docker exec -it namenode bash
+```  
+3.- Ingresamos a la memorial temporal del nodo 
 ```
-  netstat -anp | grep 10000
-tcp        0      0 0.0.0.0:10000           0.0.0.0:*               LISTEN      446/java
-
+    cd /tmp
 ```
-
-Okay. Beeline is the command line interface with Hive. Let's connect to hiveserver2 now.
-
+4.- Verficamos que el archivo se encuentra en la memoria temporal del nod
 ```
-  beeline -u jdbc:hive2://localhost:10000 -n root
-  
-  !connect jdbc:hive2://127.0.0.1:10000 scott tiger
+    ls
 ```
-
-Didn't expect to encounter scott/tiger again after my Oracle days. But there you have it. Definitely not a good idea to keep that user on production.
-
-Not a lot of databases here yet.
+5.- Movemos el archivo a Hadoop con HDFS
 ```
-  show databases;
-  
-+----------------+
-| database_name  |
-+----------------+
-| default        |
-+----------------+
-1 row selected (0.335 seconds)
+    hdfs dfs -put breweries.csv /user/data
+```  
+6.- Verificamos que el archivo se movio correctamente a Hadoop
+```
+    hdfs dfs -ls /user/data
+```
+7.- Finalmente, salimos del nodo
+```
+    exit 
 ```
 
-Let's change that.
+## Quick Start PySpark
+Vaya a [http://localhost:8080/](http://localhost:8080/) en su computadora portátil para ver el estado del maestro Spark.  
 
+Entramos al nodo de Spark master
 ```
-  create database openbeer;
-  use openbeer;
-```
-
-And let's create a table.
-
-```
-CREATE EXTERNAL TABLE IF NOT EXISTS breweries(
-    NUM INT,
-    NAME CHAR(100),
-    CITY CHAR(100),
-    STATE CHAR(100),
-    ID INT )
-ROW FORMAT DELIMITED
-FIELDS TERMINATED BY ','
-STORED AS TEXTFILE
-location '/data/openbeer/breweries';
+    docker exec -it spark-master bash
 ```
 
-And have a little select statement going.
-
+#### 1.- Ejemplo de contar palabras
+0.- Ingresamos a línea de comandos de Spark master e iniciamos PySpark.
 ```
-  select name from breweries limit 10;
-+----------------------------------------------------+
-|                        name                        |
-+----------------------------------------------------+
-| name                                                                                                 |
-| NorthGate Brewing                                                                                    |
-| Against the Grain Brewery                                                                            |
-| Jack's Abby Craft Lagers                                                                             |
-| Mike Hess Brewing Company                                                                            |
-| Fort Point Beer Company                                                                              |
-| COAST Brewing Company                                                                                |
-| Great Divide Brewing Company                                                                         |
-| Tapistry Brewing                                                                                     |
-| Big Lake Brewing                                                                                     |
-+----------------------------------------------------+
-10 rows selected (0.113 seconds)
+    /spark/bin/pyspark --master spark://spark-master:7077 --conf spark.pyspark.python=python3
+```  
+
+1.- Obtenemos los datos desde Hadoop
+```
+    text_df = spark.read.text("hdfs://namenode:9000/user/data/el_quijote.txt")
+```  
+
+2.- Convierte el df en un RDD (Resilient Distributed Dataset) y aplica una función flatMap
+```
+    words = text.rdd.flatMap(lambda line: line.value.split())
+```  
+
+3.- Toma cada palabra de la variable RDD words y cuenta cada repetición   
+ * ```
+    word_pairs = words.map(lambda word: (word, 1))
+   ```
+ * ```
+    word_counts = word_pairs.reduceByKey(lambda a, b: a + b)
+   ```
+ * ```
+    word_counts.collect()
+   ```
+ * Guardamos el resultado en en archivo de HDFS
+   ```
+     word_counts.saveAsTextFile("hdfs://namenode:9000/user/data/output/el_quijote_wc.txt")
+   ```
+
+4.- Mostramos el top 10  
+ * ```
+   top_10 = word_counts.takeOrdered(10, key=lambda x: -x[1])
+   ```
+ * ```
+   top_10
+   ``` 
+#### 2.- Ejemplo de como manipular un dataframe (breweries.csv)
+0.- Ingresamos a línea de comandos de Spark master e iniciamos PySpark.
+```
+    /spark/bin/pyspark --master spark://spark-master:7077 --conf spark.pyspark.python=python3
+```  
+
+1.- Obtenemos los datos desde Hadoop
+```
+    df = spark.read.csv("hdfs://namenode:9000/user/data/breweries.csv", header=True)
 ```
 
-There you go: your private Hive server to play with.
-
-
-## Configure Environment Variables
-
-The configuration parameters can be specified in the hadoop.env file or as environmental variables for specific services (e.g. namenode, datanode etc.):
+2.- Mostrar los primeros elementos de df
 ```
-  CORE_CONF_fs_defaultFS=hdfs://namenode:8020
+    df.show()
 ```
 
-CORE_CONF corresponds to core-site.xml. fs_defaultFS=hdfs://namenode:8020 will be transformed into:
+3.- Obtener la longitud del df (similar shape en pandas)
+ * ```
+   num_filas = df.count()
+   ```
+ * ```
+   num_columnas = len(df.columns)
+   ```
+
+4.- Obtener valores únicos de una columna
 ```
-  <property><name>fs.defaultFS</name><value>hdfs://namenode:8020</value></property>
-```
-To define dash inside a configuration parameter, use triple underscore, such as YARN_CONF_yarn_log___aggregation___enable=true (yarn-site.xml):
-```
-  <property><name>yarn.log-aggregation-enable</name><value>true</value></property>
+    from pyspark.sql.functions import col
+    unicos = df.select(col("city")).distinct()
+    unicos.show()
 ```
 
-The available configurations are:
-* /etc/hadoop/core-site.xml CORE_CONF
-* /etc/hadoop/hdfs-site.xml HDFS_CONF
-* /etc/hadoop/yarn-site.xml YARN_CONF
-* /etc/hadoop/httpfs-site.xml HTTPFS_CONF
-* /etc/hadoop/kms-site.xml KMS_CONF
-* /etc/hadoop/mapred-site.xml  MAPRED_CONF
+5.- Filtrado simple
+```
+    from pyspark.sql.functions import col
+    _df = df.filter(col("city") == "Grand Rapids")
+```  
+Ó usando una expresión SQL directamente como string
+```
+   _df = df.filter("city = 'Grand Rapids'")
+```
 
-If you need to extend some other configuration file, refer to base/entrypoint.sh bash script.
+6.- Filtrado Combinado
+```
+    from pyspark.sql.functions import col
+    _df = df.filter((col("city") == "Grand Rapids") & (col("state") == "MI"))
+    _df.show()
+```
+
+#### 3.- Ejemplo de como manipular un dataframe (afluenciastc_desglosado_04_2025.csv.csv)
+0.- Ingresamos a línea de comandos de Spark master e iniciamos PySpark.
+```
+    /spark/bin/pyspark --master spark://spark-master:7077 --conf spark.pyspark.python=python3
+```  
+
+1.- Obtenemos los datos desde Hadoop
+```
+    df = spark.read.csv("hdfs://namenode:9000/user/data/afluenciastc_desglosado_04_2025.csv", header=True)
+```
+
+2.- Mostrar los primeros elementos de df
+```
+    df.show()
+```
+
+3.- Obtener la longitud del df (similar shape en pandas)
+ * ```
+   num_filas = df.count()
+   ```
+ * ```
+   num_columnas = len(df.columns)
+   ```
+
+4.- Obtener valores únicos de una columna
+```
+    from pyspark.sql.functions import col
+    unicos = df.select(col("linea")).distinct()
+    unicos.show()
+```
+
+5.- Filtrado simple
+```
+    from pyspark.sql.functions import col
+    _df = df.filter(col("linea") == "LÃ­nea 1")
+```  
+Ó usando una expresión SQL directamente como string
+```
+   _df = df.filter("linea = 'LÃ­nea 1'")
+```
+
+6.- Filtrado Combinado
+```
+    from pyspark.sql.functions import col
+    _df = df.filter((col("linea") == "LÃ­nea 1") & (col("anio") == "2024"))
+    _df.show()
+```
+
+#### 4.- Ejemplo de como ejecutar un  script
+**Obs**  
+Debe tener creado un directorio `/user/output` en HDFS  
+
+0.- Movemos el script para ejcutar en Spark
+ * Creamos una carpeta de scripts
+   ```
+    mkdir scripts
+   ```
+ * Salimos del nodo
+   ```
+   exit
+   ```
+ * Copiamos el script a Spark Master
+   ```
+   docker cp ./scripts/el_quijote_wordcount.py spark-master:/scripts/
+   ```
+1.- Entramos al nodo de Spark master
+```
+    docker exec -it spark-master bash
+```  
+2.- Ejecutamos el script
+```
+   /spark/bin/spark-submit --conf spark.pyspark.python=python3 /scripts/el_quijote_wordcount.py
+```
+
+## Referencias
+
+ * https://colab.research.google.com/github/bdm-unlu/2020/blob/master/guias/Guia_IntroSpark.ipynb#scrollTo=GVnGWSdGBiQ5
+ * https://colab.research.google.com/github/gibranfp/CursoDatosMasivosI/blob/main/notebooks/2a_pyspark_colab.ipynb#scrollTo=rRSrQMP9LrVI
+ * https://github.com/Marcel-Jan/docker-hadoop-spark/tree/master
+
