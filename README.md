@@ -24,7 +24,7 @@ Los comandos utilizados en este repositorio se ejecutaron en los siguientes sist
 #### Opción 2 (Terminal) 
 Ejecutar  
 ```
-  git clone https://github.com/mevangelista-alvarado/docker_hadoop_spark.git 
+git clone https://github.com/mevangelista-alvarado/docker_hadoop_spark.git 
 ```
 
 ## Hadoop Docker
@@ -35,7 +35,7 @@ Para desplegar el ejemplo de un clúster HDFS, ejecute en la consola de su compu
 
 #### Instalar el contenedor por primera vez
 ```
-docker-compose up
+docker-compose up -d --no-start
 ```
 
 #### Levantar el contenedor, si ya está instalado
@@ -65,7 +65,7 @@ Acceda a las interfaces de Hadoop con las siguientes URL:
 ## Quick Start HDFS
 Entramos a Hadoop
 ```
-    docker exec -it namenode bash
+docker exec -it namenode bash
 ```
 
 Para crear una carpeta de HDFS, seguimos lo siguiente: 
@@ -81,31 +81,31 @@ Agregamos los siguientes archivos en HDFS
 #### Archivo `el_quijote.txt` 
 1.- Copiamos el archivo de nuestra computadora al contendor de Docker
 ```
-    docker cp ./datasets/el_quijote.txt namenode:/tmp
+docker cp ./datasets/el_quijote.txt namenode:/tmp
 ```  
 2.- Entramos a Hadoop
 ```
-    docker exec -it namenode bash
+docker exec -it namenode bash
 ```  
 3.- Ingresamos a la memorial temporal del nodo 
 ```
-    cd /tmp
+cd /tmp
 ```
 4.- Verficamos que el archivo se encuentra en la memoria temporal del nod
 ```
-    ls
+ls
 ```
-5.- mMovemos el archivo a Hadoop con HDFS
+5.- Movemos el archivo a Hadoop con HDFS
 ```
-    hdfs dfs -put el_quijote.txt /user/data
+hdfs dfs -put el_quijote.txt /user/data
 ```  
 6.- Verificamos que el archivo se movio correctamente a Hadoop
 ```
-    hdfs dfs -ls /user/data
+hdfs dfs -ls /user/data
 ```
 7.- Finalmente, salimos del nodo
 ```
-    exit 
+exit 
 ```
 
 #### Archivo `afluenciastc_desglosado_04_2025.csv`
@@ -115,61 +115,61 @@ Movemos el archivo al directorio `\datasets` de nuestro repo.
 
 1.- Copiamos el archivo de nuestra computadora al contendor de Docker
 ```
-    docker cp ./datasets/afluenciastc_desglosado_04_2025.csv namenode:/tmp
+docker cp ./datasets/afluenciastc_desglosado_04_2025.csv namenode:/tmp
 ```  
 2.- Entramos a Hadoop
 ```
-    docker exec -it namenode bash
+docker exec -it namenode bash
 ```  
 3.- Ingresamos a la memorial temporal del nodo 
 ```
-    cd /tmp
+cd /tmp
 ```
 4.- Verficamos que el archivo se encuentra en la memoria temporal del nod
 ```
-    ls
+ls
 ```
 5.- Movemos el archivo a Hadoop con HDFS
 ```
-    hdfs dfs -put afluenciastc_desglosado_04_2025.csv /user/data
+hdfs dfs -put afluenciastc_desglosado_04_2025.csv /user/data
 ```  
 6.- Verificamos que el archivo se movio correctamente a Hadoop
 ```
-    hdfs dfs -ls /user/data
+hdfs dfs -ls /user/data
 ```
 7.- Finalmente, salimos del nodo
 ```
-    exit 
+exit 
 ```
 
 #### Archivo `breweries.csv`
 1.- Copiamos el archivo de nuestra computadora al contendor de Docker
 ```
-    docker cp ./datasets/breweries.csv namenode:/tmp
+docker cp ./datasets/breweries.csv namenode:/tmp
 ```  
 2.- Entramos a Hadoop
 ```
-    docker exec -it namenode bash
+docker exec -it namenode bash
 ```  
 3.- Ingresamos a la memorial temporal del nodo 
 ```
-    cd /tmp
+cd /tmp
 ```
 4.- Verficamos que el archivo se encuentra en la memoria temporal del nod
 ```
-    ls
+ls
 ```
 5.- Movemos el archivo a Hadoop con HDFS
 ```
-    hdfs dfs -put breweries.csv /user/data
+hdfs dfs -put breweries.csv /user/data
 ```  
 6.- Verificamos que el archivo se movio correctamente a Hadoop
 ```
-    hdfs dfs -ls /user/data
+hdfs dfs -ls /user/data
 ```
 7.- Finalmente, salimos del nodo
 ```
-    exit 
+exit 
 ```
 
 ## Quick Start PySpark
@@ -177,141 +177,122 @@ Vaya a [http://localhost:8080/](http://localhost:8080/) en su computadora portá
 
 Entramos al nodo de Spark master
 ```
-    docker exec -it spark-master bash
+docker exec -it spark-master bash
 ```
 
 #### 1.- Ejemplo de contar palabras
 0.- Ingresamos a línea de comandos de Spark master e iniciamos PySpark.
 ```
-    /spark/bin/pyspark --master spark://spark-master:7077 --conf spark.pyspark.python=python3
+/spark/bin/pyspark --master spark://spark-master:7077 --conf spark.pyspark.python=python3
 ```  
 
 1.- Obtenemos los datos desde Hadoop
 ```
-    text_df = spark.read.text("hdfs://namenode:9000/user/data/el_quijote.txt")
+text_df = spark.read.text("hdfs://namenode:9000/user/data/el_quijote.txt")
 ```  
 
 2.- Convierte el df en un RDD (Resilient Distributed Dataset) y aplica una función flatMap
 ```
-    words = text_df.rdd.flatMap(lambda line: line.value.split())
+words = text_df.rdd.flatMap(lambda line: line.value.split())
 ```  
 
 3.- Toma cada palabra de la variable RDD words y cuenta cada repetición   
- * ```
-    word_pairs = words.map(lambda word: (word, 1))
-   ```
- * ```
-    word_counts = word_pairs.reduceByKey(lambda a, b: a + b)
-   ```
- * ```
-    word_counts.collect()
-   ```
+ * ```word_pairs = words.map(lambda word: (word, 1))```
+ * ```word_counts = word_pairs.reduceByKey(lambda a, b: a + b)```
+ * ```word_counts.collect()```
  * Guardamos el resultado en en archivo de HDFS
-   ```
-     word_counts.saveAsTextFile("hdfs://namenode:9000/user/data/output/el_quijote_wc.txt")
-   ```
+   ```word_counts.saveAsTextFile("hdfs://namenode:9000/user/data/output/el_quijote_wc.txt")```
 
 4.- Mostramos el top 10  
- * ```
-   top_10 = word_counts.takeOrdered(10, key=lambda x: -x[1])
-   ```
- * ```
-   top_10
-   ``` 
+ * ```top_10 = word_counts.takeOrdered(10, key=lambda x: -x[1])```
+ * ```top_10``` 
+
 #### 2.- Ejemplo de como manipular un dataframe (breweries.csv)
 0.- Ingresamos a línea de comandos de Spark master e iniciamos PySpark.
 ```
-    /spark/bin/pyspark --master spark://spark-master:7077 --conf spark.pyspark.python=python3
+/spark/bin/pyspark --master spark://spark-master:7077 --conf spark.pyspark.python=python3
 ```  
 
 1.- Obtenemos los datos desde Hadoop
 ```
-    df = spark.read.csv("hdfs://namenode:9000/user/data/breweries.csv", header=True)
+df = spark.read.csv("hdfs://namenode:9000/user/data/breweries.csv", header=True)
 ```
 
 2.- Mostrar los primeros elementos de df
 ```
-    df.show()
+df.show()
 ```
 
 3.- Obtener la longitud del df (similar shape en pandas)
- * ```
-   num_filas = df.count()
-   ```
- * ```
-   num_columnas = len(df.columns)
-   ```
+ * ```num_filas = df.count()```
+ * ```num_columnas = len(df.columns)```
 
 4.- Obtener valores únicos de una columna
 ```
-    from pyspark.sql.functions import col
-    unicos = df.select(col("city")).distinct()
-    unicos.show()
+from pyspark.sql.functions import col
+unicos = df.select(col("city")).distinct()
+unicos.show()
 ```
 
 5.- Filtrado simple
 ```
-    from pyspark.sql.functions import col
-    _df = df.filter(col("city") == "Grand Rapids")
+from pyspark.sql.functions import col
+_df = df.filter(col("city") == "Grand Rapids")
 ```  
 Ó usando una expresión SQL directamente como string
 ```
-   _df = df.filter("city = 'Grand Rapids'")
+_df = df.filter("city = 'Grand Rapids'")
 ```
 
 6.- Filtrado Combinado
 ```
-    from pyspark.sql.functions import col
-    _df = df.filter((col("city") == "Grand Rapids") & (col("state") == "MI"))
-    _df.show()
+from pyspark.sql.functions import col
+_df = df.filter((col("city") == "Grand Rapids") & (col("state") == "MI"))
+_df.show()
 ```
 
 #### 3.- Ejemplo de como manipular un dataframe (afluenciastc_desglosado_04_2025.csv.csv)
 0.- Ingresamos a línea de comandos de Spark master e iniciamos PySpark.
 ```
-    /spark/bin/pyspark --master spark://spark-master:7077 --conf spark.pyspark.python=python3
+/spark/bin/pyspark --master spark://spark-master:7077 --conf spark.pyspark.python=python3
 ```  
 
 1.- Obtenemos los datos desde Hadoop
 ```
-    df = spark.read.csv("hdfs://namenode:9000/user/data/afluenciastc_desglosado_04_2025.csv", header=True)
+df = spark.read.csv("hdfs://namenode:9000/user/data/afluenciastc_desglosado_04_2025.csv", header=True)
 ```
 
 2.- Mostrar los primeros elementos de df
 ```
-    df.show()
+df.show()
 ```
 
 3.- Obtener la longitud del df (similar shape en pandas)
- * ```
-   num_filas = df.count()
-   ```
- * ```
-   num_columnas = len(df.columns)
-   ```
+ * ```num_filas = df.count()```
+ * ```num_columnas = len(df.columns)```
 
 4.- Obtener valores únicos de una columna
 ```
-    from pyspark.sql.functions import col
-    unicos = df.select(col("linea")).distinct()
-    unicos.show()
+from pyspark.sql.functions import col
+unicos = df.select(col("linea")).distinct()
+unicos.show()
 ```
 
 5.- Filtrado simple
 ```
-    from pyspark.sql.functions import col
-    _df = df.filter(col("linea") == "LÃ­nea 1")
+from pyspark.sql.functions import col
+_df = df.filter(col("linea") == "LÃ­nea 1")
 ```  
 Ó usando una expresión SQL directamente como string
 ```
-   _df = df.filter("linea = 'LÃ­nea 1'")
+_df = df.filter("linea = 'LÃ­nea 1'")
 ```
 
 6.- Filtrado Combinado
 ```
-    from pyspark.sql.functions import col
-    _df = df.filter((col("linea") == "LÃ­nea 1") & (col("anio") == "2024"))
-    _df.show()
+from pyspark.sql.functions import col
+_df = df.filter((col("linea") == "LÃ­nea 1") & (col("anio") == "2024"))
+_df.show()
 ```
 
 #### 4.- Ejemplo de como ejecutar un  script
@@ -321,7 +302,7 @@ Debe tener creado un directorio `/user/output` en HDFS
 0.- Movemos el script para ejcutar en Spark
  * Creamos una carpeta de scripts
    ```
-    mkdir scripts
+   mkdir scripts
    ```
  * Salimos del nodo
    ```
@@ -333,11 +314,11 @@ Debe tener creado un directorio `/user/output` en HDFS
    ```
 1.- Entramos al nodo de Spark master
 ```
-    docker exec -it spark-master bash
+docker exec -it spark-master bash
 ```  
 2.- Ejecutamos el script
 ```
-   /spark/bin/spark-submit --conf spark.pyspark.python=python3 /scripts/el_quijote_wordcount.py
+/spark/bin/spark-submit --conf spark.pyspark.python=python3 /scripts/el_quijote_wordcount.py
 ```
 
 ## Referencias
